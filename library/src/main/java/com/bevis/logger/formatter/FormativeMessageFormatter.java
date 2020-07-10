@@ -10,7 +10,10 @@ class FormativeMessageFormatter extends Formatter<LogMessage.FormativeMessage> {
 
     @Override
     void onFormat(FormatBundle<LogMessage.FormativeMessage> node) {
-        String string = node.obj.args == null?node.obj.message:String.format(node.obj.message, node.obj.args);
+
+        String string = node.obj.args == null?node.obj.message:
+                ((node.obj.args == null || node.obj.args.length == 0)?node.obj.message:String.format(node.obj.message, node.obj.args)
+                );
         node.onNext(string);
     }
 
