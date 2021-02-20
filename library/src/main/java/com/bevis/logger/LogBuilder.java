@@ -9,6 +9,7 @@ public class LogBuilder extends MessageBuilder<LogBuilder> {
     private final int level;
     private final Printer printer;
     private Class stackOffset;
+    private StackTraceElement[]  stackTraceElements;
 
     public LogBuilder(String tag,
                       int level,
@@ -126,6 +127,11 @@ public class LogBuilder extends MessageBuilder<LogBuilder> {
         return this;
     }
 
+    public LogBuilder setStackTrace(StackTraceElement[] stackTrace) {
+        this.stackTraceElements = stackTrace;
+        return this;
+    }
+
     public LogBuilder resetStackOffset() {
         this.stackOffset = this.getClass();
         return this;
@@ -133,7 +139,7 @@ public class LogBuilder extends MessageBuilder<LogBuilder> {
 
     public LogMessage close() {
         LogMessage oldMessage = this.log;
-        oldMessage.stackTraces = getStackTrace(stackOffset);
+        oldMessage.stackTraces = getStackTrace(stackOffset, stackTraceElements);
         oldMessage.thread = Thread.currentThread();
         this.log = new LogMessage();
         oldMessage.detach();
@@ -151,7 +157,7 @@ public class LogBuilder extends MessageBuilder<LogBuilder> {
 
     public void print() {
         if(enable()) {
-            log.stackTraces = getStackTrace(stackOffset);
+            log.stackTraces = getStackTrace(stackOffset, stackTraceElements);
             log.thread = Thread.currentThread();
             switch (level) {
                 case LogLevel.VERBOSE:
@@ -173,8 +179,8 @@ public class LogBuilder extends MessageBuilder<LogBuilder> {
         }
     }
 
-    private static List<StackTraceElement> getStackTrace(Class<?> offsetClass) {
-        StackTraceElement[] traceElements = Thread.currentThread().getStackTrace();
+    private static List<StackTraceElement> getStackTrace(Class<?> offsetClass, StackTraceElement[] userSet) {
+        StackTraceElement[] traceElements = (userSet == null || userSet.length == 0)?Thread.currentThread().getStackTrace():userSet;
         // 偏移位
         String targetOffsetName = offsetClass == null? LogBuilder.class.getName():offsetClass.getName();
         StackTraceElement nextTraceElement;
